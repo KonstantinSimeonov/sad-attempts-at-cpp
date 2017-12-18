@@ -27,10 +27,7 @@ template<typename T, typename It = typename std::vector<T>::iterator>
 void mk_bench(const char* algorithm_name, void (*sort_function)(It, It), std::vector<T> input) {
 	auto begin_time = std::chrono::system_clock::now();
 	sort_function(input.begin(), input.end());
-	// assert(std::is_sorted(input.begin(), input.end()));
-	for(auto i = 0; i < 10; ++i) {
-		std::cout << input[i] << "     "
-	}
+	assert(std::is_sorted(input.begin(), input.end()));
 	auto end_time = std::chrono::system_clock::now();
 	std::chrono::duration<double> duration = end_time - begin_time;
 
