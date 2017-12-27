@@ -1,5 +1,3 @@
-#pragma once
-
 #include <vector>
 #include <algorithm>
 #include <memory>
@@ -10,7 +8,7 @@ std::size_t calculate_min_run(std::size_t size) {
 	return size;
 }
 
-template<typename It, typename T, typename Cmp> class TimSort {
+template<typename It, typename T, typename Cmp> class TimSortGallop {
 public:
 	TimSort(Cmp cmp): _cmp(cmp) {}
 
@@ -26,6 +24,9 @@ public:
 		const auto LSize = mid - left;
 		const auto RSize = right - mid;
 		const auto buffer = _merge_buffer.get();
+
+		// std::size_t gallop_c_left = 0;
+		// std::size_t gallop_c_right = 0;
 		
 		if(LSize <= RSize) {
 			std::move(left, mid, buffer);
@@ -33,12 +34,71 @@ public:
 			auto l = buffer;
 			auto r = mid;
 			auto buffer_mid = buffer + (mid - left);
-
+			// std::size_t step = 1;
+		
 			while(r < right) {
-				if(_cmp(*l, *r))
+				if(_cmp(*l, *r)) {
 					*dest++ = std::move(*l++);
-				else
+					// ++gallop_c_left;
+					// gallop_c_right = 0;
+					// if(gallop_c_left >= _min_gallop) {
+					// 	goto start_gallop_left;
+					// }
+				}
+				else {
 					*dest++ = std::move(*r++);
+					// ++gallop_c_right;
+					// gallop_c_left = 0;
+					
+					// if(gallop_c_right >= _min_gallop) {
+					// 	goto start_gallop_right;
+					// }
+				}
+
+
+// 				continue;
+
+// 				do {
+// 					_min_gallop--;
+
+// start_gallop_right:
+// 					{
+// 						step = 1;
+// 						std::size_t max_step_right = right - r;
+// 						while(step < max_step_right && _cmp(*(r + step), *l)) {
+// 							step = step * 2 + 1;
+// 						}
+
+// 						auto last_step = step / 2;
+// 						step = std::min(step, max_step_right);
+
+// 						auto blq = std::lower_bound(r + last_step, r + step, *l);
+
+// 						dest = std::move(r, blq, dest);
+// 						r = blq;
+// 					}
+
+// 					if(_min_gallop <= step) break;
+// 					_min_gallop--;
+// start_gallop_left:
+// 					{
+// 						step = 1;
+// 						std::size_t max_step_left = buffer_mid - l;
+// 						while(step < max_step_left && _cmp(*(l + step), *r)) {
+// 							step = step * 2 + 1;
+// 						}
+
+// 						auto last_step = step / 2;
+// 						step = std::min(step, max_step_left);
+
+// 						auto blq2 = std::upper_bound(l + last_step, l + step, *r);
+// 						dest = std::move(l, blq2, dest);
+// 						l = blq2;
+// 					}
+// 				} while(_min_gallop <= step);
+
+// 				if(_min_gallop < 0) _min_gallop = 1;
+// 				++_min_gallop;
 			}
 
 			std::move(l, buffer_mid, dest);
@@ -49,12 +109,10 @@ public:
 			auto r = buffer + RSize - 1;
 			auto dest = right;
 			while(l + 1 != left) {
-				if(_cmp(*r, *l))
-					*--dest = std::move(*l--);
-				else
-					*--dest = std::move(*r--);
+				if(_cmp(*r, *l)) *--dest = std::move(*l--);
+				else *--dest = std::move(*r--);
 			}
-
+		
 			std::move_backward(buffer, r + 1, dest);
 		}
 	}
@@ -140,7 +198,7 @@ public:
 };
 
 template<typename It, typename Cmp>
-inline void timsort(It begin, It end, Cmp cmp) {
+inline void timsort_gallop(It begin, It end, Cmp cmp) {
 	using T = std::remove_reference_t<decltype(*begin)>;
-	TimSort<It, T, Cmp> { cmp }(begin, end);
+	TimSortGallop<It, T, Cmp> { cmp }(begin, end);
 }

@@ -46,12 +46,15 @@ template<typename It>
 inline void qsort_wrapper(It begin, It end) {
 	using T = std::remove_reference_t<decltype(*begin)>;
 	auto placha = [](const void* x, const void* y) -> int {
-		return *reinterpret_cast<const T*>(x) >= *reinterpret_cast<const T*>(y);
+		auto a = *reinterpret_cast<const T*>(x);
+		auto b = *reinterpret_cast<const T*>(y);
+
+		return (a > b) - (a < b);
 	};
 	qsort(&*begin, end - begin, sizeof(T), placha);
 }
 
-template <typename R>
+template<typename R>
 std::vector<std::string> generate_strings(int str_count, int str_length, R& rng) {
 	std::uniform_int_distribution<> index_dist(0, str_length);
 
@@ -80,41 +83,42 @@ std::vector<std::string> generate_strings(int str_count, int str_length, R& rng)
 }
 
 int main() {
-	// std::cout << "[uint32_t]\n";
-	// for(auto n : { 10, 50, 100, 1000, 100000, 1000000 }) {
-	// 	std::vector<uint32_t> numbers;
-	// 	generate_n(std::back_inserter(numbers), n, rng);
+	std::cout << "[uint32_t]\n";
+	for(auto n : { 100, 1000, 100000, 1000000 }) {
+		std::vector<uint32_t> numbers;
+		generate_n(std::back_inserter(numbers), n, rng);
+		
+		mk_bench("qsort", qsort_wrapper, numbers);
+		mk_bench("std::sort", std::sort, numbers);
+		mk_bench("std::stable_sort", std::stable_sort, numbers);
+		mk_bench("timsort", timsort_wrapper, numbers);
+		mk_bench("radix sort", radix_sort, numbers);
 
-	// 	// mk_bench("qsort", qsort_wrapper, numbers);
-	// 	mk_bench("std::sort", std::sort, numbers);
-	// 	// mk_bench("std::stable_sort", std::stable_sort, numbers);
-	// 	mk_bench("timsort", timsort_wrapper, numbers);
-	// 	// mk_bench("radix sort", radix_sort, numbers);
+		std::cout << std::endl;
+	}
 
-	// 	std::cout << std::endl;
-	// }
+	std::cout << "[uint64_t]\n";
+	for(auto n : { 100, 1000, 100000, 1000000 }) {
+		std::vector<uint64_t> numbers;
+		generate_n(std::back_inserter(numbers), n, rng);
 
-	// std::cout << "[uint64_t]\n";
-	// for(auto n : { 10, 50, 100, 1000, 100000, 1000000 }) {
-	// 	std::vector<uint64_t> numbers;
-	// 	generate_n(std::back_inserter(numbers), n, rng);
+		mk_bench("qsort", qsort_wrapper, numbers);
+		mk_bench("std::stable_sort", std::stable_sort, numbers);
+		mk_bench("std::sort", std::sort, numbers);
+		mk_bench("timsort", timsort_wrapper, numbers);
+		mk_bench("radix sort", radix_sort, numbers);
 
-	// 	// mk_bench("qsort", qsort_wrapper, numbers);
-	// 	mk_bench("std::sort", std::sort, numbers);
-	// 	// mk_bench("std::stable_sort", std::stable_sort, numbers);
-	// 	mk_bench("timsort", timsort_wrapper, numbers);
-	// 	// mk_bench("radix sort", radix_sort, numbers);
-
-	// 	std::cout << std::endl;
-	// }
+		std::cout << std::endl;
+	}
 
 	std::cout << "[std::string]\n";
 	std::random_device rd;
 	std::mt19937_64 rng(rd());
-	for(auto n : { 10, 50, 100, 1000, 10000, 100000 }) {
+	for(auto n : { 100, 1000, 10000, 100000 }) {
 		auto strs = generate_strings(n, 20, rng);
 
 		mk_bench("qsort", qsort_wrapper, strs);
+		mk_bench("std::stable_sort", std::stable_sort, strs);
 		mk_bench("std::sort", std::sort, strs);
 		mk_bench("timsort", timsort_wrapper, strs);
 		std::cout << std::endl;
