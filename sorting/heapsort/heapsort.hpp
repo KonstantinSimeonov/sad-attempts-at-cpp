@@ -1,5 +1,8 @@
 #pragma once
 
+#include <utility>
+#include <cstddef>
+
 template<typename It, typename Cmp>
 void heapify_down(It const& begin, It const& end, std::size_t offset, Cmp cmp) {
 	std::size_t largest = offset;
@@ -8,10 +11,9 @@ void heapify_down(It const& begin, It const& end, std::size_t offset, Cmp cmp) {
 	auto root = std::move(*(begin + largest));
 
 	while(begin + right < end) {
-		auto bigger_index = left + cmp(*(begin + left), *(begin + right));
+		largest = left + cmp(*(begin + left), *(begin + right));
 
-		if(cmp(root, *(begin + bigger_index))) {
-			largest = bigger_index;
+		if(cmp(root, *(begin + largest))) {
 			*(begin + offset) = std::move(*(begin + largest));
 			offset = largest;
 	
